@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tridactyl — truly nested scrollable panels</title>
+
+  <style>
+    body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      font: 18px/1.5 system-ui, sans-serif;
+      background: #f8fafc;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    #root {
+      margin-top: 20px;
+    }
+
+    .panel {
+      max-height: 430px;
+      overflow: auto;
+      margin: 16px 0;
+      padding: 16px;
+      border: 5px solid #2563a8;
+      border-radius: 10px;
+      background: #eef6ff;
+    }
+
+    .panel[data-depth="1"] {
+      border-color: #7c3aed;
+      background: #f5f3ff;
+    }
+
+    .panel[data-depth="2"] {
+      border-color: #db2777;
+      background: #fdf2f8;
+    }
+
+    .panel[data-depth="3"] {
+      border-color: #059669;
+      background: #ecfdf5;
+    }
+
+    .panel-title {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      margin: 0 0 16px;
+      padding: 12px;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      background: white;
+      font-size: 18px;
+    }
+
+    .item-panel {
+      display: block;
+      width: 100%;
+      min-height: 70px;
+      box-sizing: border-box;
+      margin: 0 0 10px;
+      padding: 14px;
+      color: #111;
+      font: inherit;
+      text-align: left;
+      border: 1px solid #94a3b8;
+      border-radius: 7px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .item-panel:hover,
+    .item-panel:focus {
+      outline: 4px solid #2563a8;
+      outline-offset: 2px;
+      background: #dbeafe;
+    }
+
+    .target {
+      border: 5px solid #d97706;
+      background: #fff3a6;
+      font-weight: 700;
+    }
+
+    .child-area {
+      margin: 12px 0 22px 32px;
+      padding-left: 16px;
+      border-left: 4px dashed #64748b;
+    }
+
+    .note {
+      color: #475569;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>True nested scrollable panels</h1>
+
+  <p>
+    Clicking an item does not replace the current panel. Instead, it inserts a
+    new child panel inside that item. Every child panel has its own
+    <code>overflow: auto</code> scrollbar and another 100 items.
+  </p>
+
+  <p class="note">
+    For a practical test, scroll to item 80 (orange), click it, then scroll
+    within the newly created child panel and repeat.
+  </p>
+
+  <div id="root"></div>
+
+  <script>
+    "use strict";
+
+    var root = document.getElementById("root");
+    var nextPanelId = 1;
+    var ITEMS_PER_PANEL = 100;
+    var MAX_DEPTH = 6;
+
+    function createPanel(depth, label) {
+      var panel = document.createElement("section");
+
+      panel.className = "panel";
+      panel.dataset.depth = depth % 4;
+      panel.dataset.panelId = nextPanelId++;
+
+      var heading = document.createElement("h2");
+      heading.className = "panel-title";
+      heading.textContent =
+        "Panel " + panel.dataset.panelId +
+        " — depth " + depth +
+        " — " + label +
+        " — " + ITEMS_PER_PANEL + " items";
+
+      panel.appendChild(heading);
+
+      for (var i = 1; i <= ITEMS_PER_PANEL; i++) {
+        (function (number) {
+          var item = document.createElement("button");
+
+          item.type = "button";
+          item.className = "item-panel";
+          item.textContent =
+            "Open nested panel from item " + number;
+
+          if (number === 80) {
+            item.className = "item-panel target";
+            item.textContent =
+              "Open nested panel from item 80 — TARGET";
+          }
+
+          item.addEventListener("click", function () {
+            var existingChild = item.nextElementSibling;
+
+            if (
+              existingChild &&
+              existingChild.classList.contains("child-area")
+            ) {
+              existingChild.remove();
+              return;
+            }
+
+            if (depth >= MAX_DEPTH) {
+              alert("Maximum test depth reached: " + MAX_DEPTH);
+              return;
+            }
+
+            var childArea = document.createElement("div");
+            childArea.className = "child-area";
+
+            var childPanel = createPanel(
+              depth + 1,
+              "opened from parent item " + number
+            );
+
+            childArea.appendChild(childPanel);
+            item.insertAdjacentElement("afterend", childArea);
+          });
+
+          panel.appendChild(item);
+        })(i);
+      }
+
+      return panel;
+    }
+
+    root.appendChild(createPanel(0, "root panel"));
+  </script>
+</body>
+</html>
