@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generic Scroll Context Test</title>
+<style>
+  :root {
+    color-scheme: dark;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #111827;
+    color: #e5e7eb;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-width: 2300px;
+    background: #111827;
+  }
+
+  button, input { font: inherit; }
+
+  .page-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: 2300px;
+    padding: 16px 28px;
+    border-bottom: 1px solid #334155;
+    background: rgba(15, 23, 42, .96);
+    backdrop-filter: blur(8px);
+  }
+
+  .brand { color: #7dd3fc; font-weight: 800; font-size: 23px; letter-spacing: -.5px; }
+  .header-input { width: 520px; padding: 11px 14px; border: 1px solid #475569; border-radius: 7px; background: #1e293b; color: #f8fafc; }
+  .header-note { color: #94a3b8; font-size: 14px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 480px 820px 1000px;
+    gap: 20px;
+    width: 2300px;
+    min-height: calc(100vh - 67px);
+    padding: 20px 28px 64px;
+  }
+
+  .panel {
+    border: 1px solid #334155;
+    border-radius: 10px;
+    background: #0f172a;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  }
+
+  .panel-title {
+    position: sticky;
+    top: 67px;
+    z-index: 4;
+    margin: 0;
+    padding: 15px 18px;
+    border-bottom: 1px solid #334155;
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 16px;
+  }
+
+  .tips { padding: 14px 18px; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .keys { color: #7dd3fc; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .items { padding: 0 12px 18px; }
+  .item {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #172033;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .item:hover, .item:focus-visible { border-color: #38bdf8; outline: 2px solid transparent; background: #1d2d46; }
+  .item.active { border-color: #22c55e; background: #14362a; }
+  .item h3 { margin: 0 0 5px; color: #f8fafc; font-size: 16px; }
+  .item p { margin: 3px 0; color: #a5b4c8; font-size: 13px; }
+  .tag { display: inline-block; margin-top: 8px; padding: 3px 7px; border-radius: 999px; background: #263751; color: #93c5fd; font-size: 12px; }
+
+  .detail { min-height: 1500px; }
+  .empty {
+    margin: 20px;
+    padding: 28px;
+    border: 1px dashed #475569;
+    border-radius: 8px;
+    color: #94a3b8;
+    text-align: center;
+  }
+
+  .detail-content { padding: 22px; }
+  .detail-content h1 { margin: 0 0 7px; font-size: 27px; }
+  .detail-content h2 { margin: 30px 0 12px; color: #7dd3fc; font-size: 18px; }
+  .detail-content p, .detail-content li { color: #cbd5e1; line-height: 1.62; }
+  .detail-content li { margin: 10px 0; }
+  .detail-meta { color: #94a3b8; }
+
+  .nested-wrap { padding: 20px; }
+  .nested-scroller {
+    height: 430px;
+    overflow: auto;
+    border: 3px solid #f59e0b;
+    border-radius: 10px;
+    background: #1c1917;
+    scroll-behavior: auto;
+  }
+
+  .nested-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 14px 18px;
+    border-bottom: 1px solid #92400e;
+    background: #292524;
+    color: #fde68a;
+    font-weight: 750;
+  }
+
+  .nested-content { min-width: 1180px; padding: 18px; }
+  .nested-grid { display: grid; grid-template-columns: repeat(4, 250px); gap: 16px; }
+  .nested-card { min-height: 155px; padding: 14px; border: 1px solid #57534e; border-radius: 8px; background: #292524; }
+  .nested-card h3 { margin: 0 0 8px; color: #fef3c7; font-size: 15px; }
+  .nested-card p { margin: 0; color: #d6d3d1; font-size: 13px; line-height: 1.45; }
+
+  .right-rail { min-height: 1900px; padding-bottom: 30px; }
+  .wide-banner { width: 940px; margin: 20px; padding: 25px; border: 1px solid #7c3aed; border-radius: 9px; background: #2e1065; }
+  .wide-banner h2 { margin: 0 0 8px; color: #ddd6fe; }
+  .wide-banner p { color: #c4b5fd; }
+  .rail-cards { display: grid; grid-template-columns: repeat(3, 285px); gap: 16px; margin: 20px; }
+  .rail-card { min-height: 220px; padding: 18px; border: 1px solid #475569; border-radius: 8px; background: #172033; }
+  .rail-card h3 { margin-top: 0; color: #e0f2fe; }
+  .rail-card p { color: #a5b4c8; line-height: 1.55; }
+
+  .footer-space { width: 2300px; height: 380px; padding: 32px 28px; color: #94a3b8; }
+  code { padding: 2px 5px; border-radius: 4px; background: #1e293b; color: #bae6fd; }
+</style>
+</head>
+<body>
+<header class="page-header">
+  <div class="brand">Scroll Context Test</div>
+  <input class="header-input" aria-label="Example input" value="generic test page" readonly>
+  <span class="header-note">Deliberately wide outer page: test horizontal scrolling.</span>
+</header>
+
+<main class="layout">
+  <section class="panel" aria-label="Root page item list">
+    <h2 class="panel-title">List — root-page content</h2>
+    <div class="tips">
+      Select any item below. The centre panel will create an independently scrollable child element containing lots of text and horizontally overflowing content.<br><br>
+      Try <span class="keys">,,</span> or <span class="keys">;;</span> on the amber box, then test <span class="keys">j k gg G</span>. Also test <span class="keys">,j ,k ,g ,G ,^ ,$</span>.
+    </div>
+    <div class="items" id="items"></div>
+  </section>
+
+  <section class="panel detail" aria-label="Selected item details">
+    <h2 class="panel-title">Details — child scroller appears after selection</h2>
+    <div id="detail">
+      <div class="empty">No item selected yet. Activate any item in the left column.</div>
+    </div>
+  </section>
+
+  <aside class="panel right-rail" aria-label="Far-right root page content">
+    <h2 class="panel-title">Far-right root content</h2>
+    <div class="wide-banner">
+      <h2>Far-right column</h2>
+      <p>This is outer-page content. It is far enough to the right to make the root document horizontally scrollable.</p>
+    </div>
+    <div class="rail-cards" id="rail"></div>
+  </aside>
+</main>
+
+<div class="footer-space">
+  <h2>Root-page footer</h2>
+  <p>This adds extra vertical root-document height. It helps distinguish root-page scrolling from scrolling within the amber child container.</p>
+</div>
+
+<script>
+  const labels = Array.from({ length: 24 }, (_, i) => `Example item ${i + 1}`);
+  const items = document.getElementById("items");
+  const rail = document.getElementById("rail");
+  const detail = document.getElementById("detail");
+
+  labels.forEach((label, index) => {
+    const button = document.createElement("button");
+    button.className = "item";
+    button.type = "button";
+    button.innerHTML = `<h3>${label}</h3><p>Generic category · Record ${index + 1}</p><p>Select to create the nested test container</p><span class="tag">Create child scroller</span>`;
+    button.addEventListener("click", () => selectItem(index, label, button));
+    items.appendChild(button);
+  });
+
+  for (let i = 1; i <= 18; i++) {
+    const card = document.createElement("article");
+    card.className = "rail-card";
+    card.innerHTML = `<h3>Root card ${i}</h3><p>Generic outer-page content. Horizontal root scrolling should reveal and hide these cards independently of the amber child container.</p>`;
+    rail.appendChild(card);
+  }
+
+  function selectItem(index, label, button) {
+    document.querySelectorAll(".item").forEach(el => el.classList.remove("active"));
+    button.classList.add("active");
+
+    const blocks = Array.from({ length: 48 }, (_, i) => `
+      <article class="nested-card">
+        <h3>Child block ${i + 1}</h3>
+        <p>This block is inside the amber <code>overflow: auto</code> element. It provides a separate vertical scrolling target.</p>
+        <p>The grid is deliberately wider than the visible area, so the child container has horizontal overflow too.</p>
+      </article>`).join("");
+
+    detail.innerHTML = `
+      <div class="detail-content">
+        <h1>${label}</h1>
+        <p class="detail-meta">Generic test record ${index + 1}</p>
+        <p>Selecting this item created the amber nested scroller below. Compare normal page scrolling with scrolling after choosing this amber element as a Tridactyl scroll context.</p>
+        <h2>Nested child scroll container</h2>
+      </div>
+      <div class="nested-wrap">
+        <div class="nested-scroller" tabindex="0" aria-label="Nested independently scrollable test area">
+          <div class="nested-sticky">Amber child scroller — vertical and horizontal overflow</div>
+          <div class="nested-content">
+            <div class="nested-grid">${blocks}</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-content">
+        <h2>Content below the child container</h2>
+        <p>This text belongs to the outer document, not the amber child box. It makes it clear whether you are scrolling the nested container or the root page.</p>
+        ${Array.from({ length: 20 }, (_, i) => `<p>Outer paragraph ${i + 1}: Generic repeated root-page content for vertical scroll-context testing. This is outside the amber child container.</p>`).join("")}
+      </div>`;
+
+    detail.scrollIntoView({ block: "start", behavior: "instant" });
+  }
+</script>
+</body>
+</html>
